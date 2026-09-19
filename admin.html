@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus HOST — Admin</title>
+<style>
+:root {
+  --bg:#070707; --panel:#0d0d0f; --card:#151519; --card-hover:#1a1a1f;
+  --border:#1e1e24; --border-hover:#2a2a32; --text:#f0f0f2; --muted:#6b6b78;
+  --dim:#3a3a45; --red:#ef4444; --red-dim:#991b1b; --red-glow:rgba(239,68,68,.12);
+  --blue:#3b82f6; --green:#22c55e; --amber:#f59e0b;
+  --font:"Inter","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"SF Mono","JetBrains Mono",ui-monospace,monospace; --sidebar-w:220px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit;color:inherit}
+.app{display:flex;min-height:100%}
+.sidebar{width:var(--sidebar-w);background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40}
+.sidebar-brand{display:flex;align-items:center;gap:12px;padding:20px 18px;border-bottom:1px solid var(--border)}
+.logo-mark{width:28px;height:28px;border:1.5px solid var(--red);display:grid;place-items:center}
+.logo-mark::before{content:"";width:8px;height:8px;background:var(--red)}
+.logo-text{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase}
+.logo-text span{color:var(--muted);font-weight:400}
+.nav-section{padding:16px 12px 6px}
+.nav-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-family:var(--mono);padding:0 8px 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:3px;font-size:13px;color:var(--muted);margin-bottom:2px;transition:background .12s,color .12s}
+.nav-item:hover{background:var(--card);color:var(--text)}
+.nav-item.active{background:var(--red-glow);color:var(--text)}
+.nav-item svg{width:16px;height:16px;opacity:.7}
+.nav-item.active svg{opacity:1;stroke:var(--red)}
+.sidebar-foot{margin-top:auto;padding:14px;border-top:1px solid var(--border);font-size:11px;color:var(--dim);font-family:var(--mono)}
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0}
+.topbar{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--panel);position:sticky;top:0;z-index:30}
+.topbar-title{font-size:14px;font-weight:500}
+.topbar-sub{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.user-chip{padding:6px 10px;border:1px solid var(--border);border-radius:3px;font-size:12px;color:var(--muted)}
+.user-chip strong{color:var(--text);font-weight:500}
+.content{padding:24px}
+.page{display:none}.page.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:16px 18px}
+.stat-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:500;letter-spacing:-.02em}
+.stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}.stat-value.amber{color:var(--amber)}
+.stat-sub{font-size:11px;color:var(--dim);margin-top:4px;font-family:var(--mono)}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap}
+.sec-head h2{font-size:14px;font-weight:500}
+.btn{height:34px;padding:0 14px;border-radius:3px;font-size:12px;font-weight:500;letter-spacing:.04em;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--card);color:var(--text)}
+.btn:hover{border-color:var(--border-hover);background:var(--card-hover)}
+.btn-primary{background:var(--red);border-color:var(--red);color:#fff}
+.btn-primary:hover{background:#dc2626}
+.btn-sm{height:28px;padding:0 10px;font-size:11px}
+.btn-danger{border-color:var(--red-dim);color:#fca5a5}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);font-weight:500;padding:10px 12px;border-bottom:1px solid var(--border)}
+td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.015)}
+.badge{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono);padding:3px 8px;border-radius:2px;border:1px solid}
+.badge-on{color:var(--green);border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08)}
+.badge-off{color:var(--muted);border-color:var(--border)}
+.badge-run{color:var(--green);border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08)}
+.badge-stop{color:var(--muted);border-color:var(--border)}
+.badge-err{color:var(--red);border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:auto}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:4px;width:100%;max-width:440px;padding:24px}
+.modal h3{font-size:15px;font-weight:500;margin-bottom:4px}
+.modal .desc{font-size:12px;color:var(--muted);margin-bottom:20px}
+.modal .field{margin-bottom:14px}
+.modal label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:6px}
+.modal input,.modal select{width:100%;height:38px;background:var(--card);border:1px solid var(--border);padding:0 12px;border-radius:2px;font-size:13px;outline:none}
+.modal input:focus,.modal select:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-glow)}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--panel);border:1px solid var(--border);padding:12px 16px;font-size:13px;border-radius:3px;min-width:240px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast.ok{border-color:rgba(34,197,94,.4)}.toast.err{border-color:rgba(239,68,68,.4)}
+.mono{font-family:var(--mono);font-size:12px;color:var(--muted)}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:none}.main{margin-left:0}.content{padding:16px}}
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="logo-mark"></div><div class="logo-text">FLIX <span>ADMIN</span></div></div>
+  <div class="nav-section">
+    <div class="nav-label">Control</div>
+    <a class="nav-item active" data-page="dash" href="#" onclick="showPage('dash');return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" data-page="users" href="#" onclick="showPage('users');return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Users
+    </a>
+    <a class="nav-item" data-page="servers" href="#" onclick="showPage('servers');return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="6" rx="1"/><rect x="2" y="15" width="20" height="6" rx="1"/><circle cx="6" cy="6" r="1"/><circle cx="6" cy="18" r="1"/></svg>
+      Servers
+    </a>
+    <a class="nav-item" data-page="audit" href="#" onclick="showPage('audit');return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Audit Log
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Account</div>
+    <a class="nav-item" href="/dashboard">User Console</a>
+    <a class="nav-item" href="#" onclick="logout();return false;">Sign out</a>
+  </div>
+  <div class="sidebar-foot">ADMIN · v7</div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div>
+      <div class="topbar-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-sub" id="pageSub">System control</div>
+    </div>
+    <div class="user-chip"><strong id="userName">—</strong></div>
+  </header>
+  <div class="content">
+    <section class="page active" id="page-dash">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Users</div><div class="stat-value" id="stUsers">0</div><div class="stat-sub">accounts</div></div>
+        <div class="stat"><div class="stat-label">Servers</div><div class="stat-value" id="stServers">0</div><div class="stat-sub">total</div></div>
+        <div class="stat"><div class="stat-label">Running</div><div class="stat-value green" id="stRun">0</div><div class="stat-sub">processes</div></div>
+        <div class="stat" style="cursor:pointer" onclick="toggleMaint()"><div class="stat-label">Maintenance</div><div class="stat-value" id="stMaint">—</div><div class="stat-sub">click to toggle</div></div>
+        <div class="stat"><div class="stat-label">CPU / RAM</div><div class="stat-value" id="stSys">—</div><div class="stat-sub" id="stSysSub">host</div></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-users">
+      <div class="sec-head">
+        <h2>Users</h2>
+        <button class="btn btn-primary" onclick="openCreateUser()">Create User</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Plan</th><th>Status</th><th>Last login</th><th>Actions</th></tr></thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="page" id="page-servers">
+      <div class="sec-head"><h2>All servers</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Owner</th><th>Runtime</th><th>Status</th><th>Port</th><th>Resources</th><th>Actions</th></tr></thead>
+          <tbody id="serversBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="page" id="page-audit">
+      <div class="sec-head"><h2>Audit log</h2><button class="btn btn-sm" onclick="loadAudit()">Refresh</button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th><th>Result</th></tr></thead>
+          <tbody id="auditBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="modal-bg" id="userModal">
+  <div class="modal">
+    <h3>Create user</h3>
+    <p class="desc">Accounts are created by admin only. No public registration.</p>
+    <div class="field"><label>Username</label><input id="uName"></div>
+    <div class="field"><label>Password</label><input id="uPass" type="password"></div>
+    <div class="field"><label>Role</label>
+      <select id="uRole"><option value="user">user</option><option value="support">support</option><option value="moderator">moderator</option><option value="admin">admin</option></select>
+    </div>
+    <div class="field"><label>Plan ID</label><input id="uPlan" type="number" value="1"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeUserModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="createUser()">Create</button>
+    </div>
+  </div>
+</div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+let ME=null, USERS=[], SERVERS=[], PLANS=[];
+
+function toast(m,t){const e=document.createElement('div');e.className='toast '+(t||'');e.textContent=m;document.getElementById('toasts').appendChild(e);setTimeout(()=>e.remove(),3500)}
+function esc(t){const d=document.createElement('div');d.textContent=t==null?'':String(t);return d.innerHTML}
+async function api(path,opts){
+  const res=await fetch(path,Object.assign({credentials:'same-origin'},opts||{}));
+  if(res.status===401){location.href='/';return null}
+  if(res.status===403){toast('Forbidden','err');throw new Error('Forbidden')}
+  let data=null;try{data=await res.json()}catch(_){}
+  if(!res.ok)throw new Error((data&&data.detail)||res.statusText);
+  return data;
+}
+
+function showPage(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.toggle('active',i.dataset.page===n));
+  const t={dash:['Dashboard','System control'],users:['Users','Account management'],servers:['Servers','Global server list'],audit:['Audit Log','Security trail']};
+  document.getElementById('pageTitle').textContent=t[n][0];
+  document.getElementById('pageSub').textContent=t[n][1];
+  if(n==='audit')loadAudit();
+}
+
+async function loadMe(){ME=await api('/api/auth/me');if(!ME)return;document.getElementById('userName').textContent=ME.username}
+
+async function loadSystem(){
+  try{
+    const h=await api('/api/admin/system');
+    if(h){
+      document.getElementById('stSys').textContent=Math.round(h.cpu_percent||0)+'%';
+      document.getElementById('stSysSub').textContent='RAM '+Math.round(h.ram_percent||0)+'% · '+ (h.running_servers||0)+' running';
+      document.getElementById('stRun').textContent=h.running_servers||0;
+    }
+  }catch(_){}
+}
+
+async function loadUsers(){
+  USERS=await api('/api/admin/users')||[];
+  document.getElementById('stUsers').textContent=USERS.length;
+  document.getElementById('usersBody').innerHTML=USERS.map(u=>`
+    <tr>
+      <td class="mono">${u.id}</td>
+      <td>${esc(u.username)}</td>
+      <td class="mono">${esc(u.role)}</td>
+      <td>${esc(u.plan_name||'')}</td>
+      <td>${u.enabled?'<span class="badge badge-on">enabled</span>':'<span class="badge badge-off">disabled</span>'}</td>
+      <td class="mono">${u.last_login?u.last_login.slice(0,19):'—'}</td>
+      <td>
+        <button class="btn btn-sm" onclick="toggleUser(${u.id},${u.enabled?0:1})">${u.enabled?'Disable':'Enable'}</button>
+        <button class="btn btn-sm" onclick="impersonate(${u.id})">Login as</button>
+        ${u.role==='user'?`<button class="btn btn-sm btn-danger" onclick="delUser(${u.id})">Delete</button>`:''}
+      </td>
+    </tr>`).join('')||'<tr><td colspan="7" class="mono">No users</td></tr>';
+}
+
+async function loadServers(){
+  SERVERS=await api('/api/servers')||[];
+  document.getElementById('stServers').textContent=SERVERS.length;
+  let run=0;SERVERS.forEach(s=>{if(s.status==='running')run++});
+  document.getElementById('stRun').textContent=run;
+  document.getElementById('serversBody').innerHTML=SERVERS.map(s=>{
+    let badge='badge-stop';
+    if(s.status==='running')badge='badge-run';
+    else if(['crashed','error','failed'].includes(s.status))badge='badge-err';
+    return `<tr>
+      <td class="mono">${s.id}</td>
+      <td>${esc(s.name)}</td>
+      <td>${esc(s.username||'')}</td>
+      <td class="mono">${esc(s.runtime)}</td>
+      <td><span class="badge ${badge}">${esc(s.status)}</span></td>
+      <td class="mono">${s.port||'—'}</td>
+      <td class="mono">${s.running?(s.cpu_percent||0)+'% / '+(s.ram_mb||0)+'MB':'—'}</td>
+      <td>
+        <button class="btn btn-sm" onclick="srvAct(${s.id},'start')">Start</button>
+        <button class="btn btn-sm" onclick="srvAct(${s.id},'stop')">Stop</button>
+        <button class="btn btn-sm" onclick="srvAct(${s.id},'restart')">Restart</button>
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="8" class="mono">No servers</td></tr>';
+}
+
+async function loadAudit(){
+  const rows=await api('/api/admin/audit')||[];
+  document.getElementById('auditBody').innerHTML=rows.map(r=>`
+    <tr>
+      <td class="mono">${(r.created_at||'').slice(0,19)}</td>
+      <td>${esc(r.actor)}</td>
+      <td class="mono">${esc(r.action)}</td>
+      <td>${esc(r.target||'')}</td>
+      <td class="mono">${esc(r.result)}</td>
+    </tr>`).join('')||'<tr><td colspan="5" class="mono">Empty</td></tr>';
+}
+
+async function toggleUser(id,enabled){
+  const fd=new FormData();fd.append('enabled',enabled);
+  try{await api('/api/admin/users/'+id,{method:'PATCH',body:fd});toast('Updated','ok');loadUsers()}
+  catch(e){toast(e.message,'err')}
+}
+async function delUser(id){
+  if(!confirm('Delete user and all their servers?'))return;
+  try{await api('/api/admin/users/'+id,{method:'DELETE'});toast('Deleted','ok');loadUsers();loadServers()}
+  catch(e){toast(e.message,'err')}
+}
+async function impersonate(id){
+  try{await api('/api/admin/impersonate/'+id,{method:'POST'});location.href='/dashboard'}
+  catch(e){toast(e.message,'err')}
+}
+async function srvAct(id,act){
+  try{await api('/api/servers/'+id+'/'+act,{method:'POST'});toast(act+' ok','ok');setTimeout(loadServers,600)}
+  catch(e){toast(e.message,'err')}
+}
+function openCreateUser(){document.getElementById('userModal').classList.add('open')}
+function closeUserModal(){document.getElementById('userModal').classList.remove('open')}
+async function createUser(){
+  const fd=new FormData();
+  fd.append('username',document.getElementById('uName').value.trim());
+  fd.append('password',document.getElementById('uPass').value);
+  fd.append('role',document.getElementById('uRole').value);
+  fd.append('plan_id',document.getElementById('uPlan').value||'1');
+  try{await api('/api/admin/users',{method:'POST',body:fd});toast('User created','ok');closeUserModal();loadUsers()}
+  catch(e){toast(e.message,'err')}
+}
+async function logout(){await api('/api/auth/logout',{method:'POST'});location.href='/'}
+
+
+async function toggleMaint(){
+  const cur=document.getElementById('stMaint').textContent==='ON';
+  const fd=new FormData();fd.append('enabled',cur?0:1);
+  try{await api('/api/admin/maintenance',{method:'POST',body:fd});toast(cur?'Maintenance off':'Maintenance on','ok');loadMaint()}
+  catch(e){toast(e.message,'err')}
+}
+async function loadMaint(){
+  try{const s=await api('/api/system/status');document.getElementById('stMaint').textContent=s.maintenance?'ON':'OFF';
+    document.getElementById('stMaint').className='stat-value '+(s.maintenance?'amber':'green')}catch(_){}
+}
+
+(async function(){
+  try{
+    await loadMe();
+    await Promise.all([loadUsers(),loadServers(),loadSystem(),loadMaint()]);
+    setInterval(()=>{loadServers();loadSystem()},10000);
+  }catch(e){toast(e.message,'err')}
+})();
+</script>
+</body>
+</html>

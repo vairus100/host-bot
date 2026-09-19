@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus HOST — Access</title>
+<style>
+  :root {
+    --bg: #070707;
+    --panel: #0d0d0f;
+    --card: #151519;
+    --border: #1e1e24;
+    --border-hover: #2a2a32;
+    --text: #f0f0f2;
+    --muted: #6b6b78;
+    --dim: #3a3a45;
+    --red: #ef4444;
+    --red-dim: #991b1b;
+    --red-glow: rgba(239, 68, 68, 0.15);
+    --blue: #3b82f6;
+    --green: #22c55e;
+    --font: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  /* subtle grid */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ambient red glow */
+  body::after {
+    content: "";
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    top: -200px;
+    right: -150px;
+    background: radial-gradient(circle, var(--red-glow) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .shell {
+    position: relative;
+    z-index: 1;
+    min-height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .brand-side { display: none; }
+  }
+
+  /* LEFT — brand */
+  .brand-side {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px 56px;
+    border-right: 1px solid var(--border);
+    background: linear-gradient(160deg, #0a0a0c 0%, #070707 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .brand-side .scanline {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+  }
+
+  .logo-block {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--red);
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+
+  .logo-mark::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    background: var(--red);
+  }
+
+  .logo-text {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .logo-text span {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .brand-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 28px;
+    max-width: 420px;
+  }
+
+  .brand-center h1 {
+    font-size: clamp(28px, 3.5vw, 40px);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  .brand-center h1 em {
+    font-style: normal;
+    color: var(--red);
+  }
+
+  .brand-center p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 340px;
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-top: 8px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .brand-footer {
+    font-size: 11px;
+    color: var(--dim);
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+  }
+
+  /* RIGHT — form */
+  .form-side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .form-card {
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .form-header {
+    margin-bottom: 36px;
+  }
+
+  .form-header .label {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-bottom: 10px;
+  }
+
+  .form-header h2 {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .field {
+    margin-bottom: 18px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-family: var(--mono);
+  }
+
+  .field input {
+    width: 100%;
+    height: 44px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font);
+    padding: 0 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    border-radius: 2px;
+  }
+
+  .field input::placeholder {
+    color: var(--dim);
+  }
+
+  .field input:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px var(--red-glow);
+  }
+
+  .error-box {
+    display: none;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--red-dim);
+    background: rgba(239, 68, 68, 0.06);
+    font-size: 13px;
+    color: #fca5a5;
+    line-height: 1.4;
+  }
+
+  .error-box.visible { display: block; }
+
+  .submit-btn {
+    width: 100%;
+    height: 46px;
+    margin-top: 8px;
+    background: var(--red);
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: background 0.15s, transform 0.1s;
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .submit-btn:hover:not(:disabled) {
+    background: #dc2626;
+  }
+
+  .submit-btn:active:not(:disabled) {
+    transform: scale(0.99);
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .submit-btn .spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+
+  .submit-btn.loading .btn-text { display: none; }
+  .submit-btn.loading .spinner { display: block; }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .form-meta {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--dim);
+    font-family: var(--mono);
+  }
+
+  .form-meta a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .form-meta a:hover { color: var(--text); }
+
+  /* geometric corner accents */
+  .corner {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: var(--dim);
+    border-style: solid;
+    opacity: 0.5;
+  }
+  .corner-tl { top: 16px; left: 16px; border-width: 1px 0 0 1px; }
+  .corner-tr { top: 16px; right: 16px; border-width: 1px 1px 0 0; }
+  .corner-bl { bottom: 16px; left: 16px; border-width: 0 0 1px 1px; }
+  .corner-br { bottom: 16px; right: 16px; border-width: 0 1px 1px 0; }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <!-- Brand panel -->
+    <aside class="brand-side">
+      <div class="scanline"></div>
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+
+      <div class="logo-block">
+        <div class="logo-mark"></div>
+        <div class="logo-text">Nexus <span>HOST</span></div>
+      </div>
+
+      <div class="brand-center">
+        <h1>Infrastructure<br><em>Control</em> Center</h1>
+        <p>
+          Secure access to your private hosting platform.
+          Manage processes, deployments, and resources from one console.
+        </p>
+        <div class="status-row">
+          <div class="status-pill">
+            <span class="status-dot"></span>
+            System Online
+          </div>
+        </div>
+      </div>
+
+      <div class="brand-footer">Nexus HOST &middot; INFRASTRUCTURE OS</div>
+    </aside>
+
+    <!-- Form panel -->
+    <main class="form-side">
+      <div class="form-card">
+        <div class="form-header">
+          <div class="label">Authentication</div>
+          <h2>Sign in to continue</h2>
+        </div>
+
+        <div class="error-box" id="err"></div>
+
+        <form id="loginForm" autocomplete="on">
+          <div class="field">
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" autocomplete="username" required autofocus placeholder="Enter username">
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Enter password">
+          </div>
+          <button type="submit" class="submit-btn" id="btn">
+            <span class="btn-text">Access Console</span>
+            <span class="spinner"></span>
+          </button>
+        </form>
+
+        <div class="form-meta">
+          <span>Authorized personnel only</span>
+          <span>v7</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+<script>
+(function () {
+  const form = document.getElementById("loginForm");
+  const err = document.getElementById("err");
+  const btn = document.getElementById("btn");
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    err.classList.remove("visible");
+    err.textContent = "";
+    btn.disabled = true;
+    btn.classList.add("loading");
+
+    const fd = new FormData(form);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        body: fd,
+        credentials: "same-origin",
+      });
+      const data = await res.json().catch(function () { return {}; });
+
+      if (!res.ok) {
+        err.textContent = data.detail || "Invalid credentials";
+        err.classList.add("visible");
+        btn.disabled = false;
+        btn.classList.remove("loading");
+        return;
+      }
+
+      // redirect by role
+      if (data.role === "owner" || data.role === "admin" || data.role === "moderator" || data.role === "support") {
+        window.location.href = "/admin";
+      } else {
+        window.location.href = "/dashboard";
+      }
+    } catch (ex) {
+      err.textContent = "Connection failed. Try again.";
+      err.classList.add("visible");
+      btn.disabled = false;
+      btn.classList.remove("loading");
+    }
+  });
+})();
+</script>
+</body>
+</html>
